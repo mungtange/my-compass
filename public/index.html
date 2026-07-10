@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>🧭 모던 나침반</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #0a0e17;
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-image: 
+                radial-gradient(ellipse at 20% 50%, rgba(72, 49, 212, 0.15) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 50%, rgba(0, 200, 255, 0.1) 0%, transparent 60%);
+            padding: 20px;
+            touch-action: none;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 40px;
+            padding: 48px 56px;
+            max-width: 480px;
+            width: 100%;
+            box-shadow: 
+                0 30px 80px rgba(0, 0, 0, 0.6),
+                inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #fff;
+            letter-spacing: -0.3px;
+        }
+
+        .header .sub {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.3);
+            font-weight: 400;
+        }
+
+        .status-badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+            background: rgba(99, 102, 241, 0.2);
+            color: #818cf8;
+            border: 1px solid rgba(99, 102, 241, 0.15);
+            transition: all 0.4s ease;
+            white-space: nowrap;
+        }
+
+        .status-badge.active {
+            background: rgba(52, 211, 153, 0.15);
+            color: #34d399;
+            border-color: rgba(52, 211, 153, 0.2);
+            animation: pulse-glow 2s infinite;
+        }
+
+        .status-badge.error {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border-color: rgba(239, 68, 68, 0.2);
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(52, 211, 153, 0.05); }
+            50% { box-shadow: 0 0 30px rgba(52, 211, 153, 0.15); }
+        }
+
+        .compass-wrapper {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1/1;
+            margin: 0 auto 32px;
+            max-width: 300px;
+        }
+
+        .compass-ring {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(30, 41, 82, 0.8), rgba(15, 23, 42, 0.95));
+            border: 2px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 
+                inset 0 0 60px rgba(0, 0, 0, 0.5),
+                0 20px 60px rgba(0, 0, 0, 0.4);
+            overflow: visible;
+        }
+
+        .compass-ring::before {
+            content: '';
+            position: absolute;
+            inset: -8px;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, transparent, rgba(99, 102, 241, 0.1), transparent, rgba(139, 92, 246, 0.1), transparent);
+            z-index: -1;
+            animation: spin-ring 20s linear infinite;
+        }
+
+        @keyframes spin-ring {
+            to { transform: rotate(360deg); }
+        }
+
+        .direction-label {
+            position: absolute;
+            font-size: 15px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.35);
+            letter-spacing: 0.5px;
+            z-index: 15;
+            pointer-events: none;
+            text-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .direction-label.n { 
+            top: 10px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 20px;
+        }
+        .direction-label.s { 
+            bottom: 10px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            font-size: 18px;
+        }
+        .direction-label.e { 
+            right: 10px; 
+            top: 50%; 
+            transform: translateY(-50%); 
+            font-size: 18px;
+        }
+        .direction-label.w { 
+            left: 10px; 
+            top: 50%; 
+            transform: translateY(-50%); 
+            font-size: 18px;
+        }
+
+        .tick-mark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 2px;
+            height: 12px;
+            background: rgba(255, 255, 255, 0.06);
+            transform-origin: center center;
+            transform: translate(-50%, -50%) rotate(0deg) translateY(-48%);
+            border-radius: 1px;
+            z-index: 2;
+        }
+
+        .tick-mark.major {
+            height: 18px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .needle-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 4px;
+            height: 38%;
+            transform-origin: bottom center;
+            transform: translate(-50%, -100%) rotate(0deg);
+            transition: transform 0.2s ease-out;
+            z-index: 10;
+            filter: drop-shadow(0 4px 20px rgba(99, 102, 241, 0.3));
+        }
+
+        .needle-north {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-bottom: 55px solid #818cf8;
+            filter: drop-shadow(0 0 20px rgba(99, 102, 241, 0.4));
+        }
+
+        .needle-south {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-top: 40px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .center-pin {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            background: radial-gradient(circle at 40% 35%, #a78bfa, #6366f1);
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            z-index: 20;
+            box-shadow: 0 0 30px rgba(99, 102, 241, 0.3);
+        }
+
+        .center-pin::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 8px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .info-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 16px 14px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .info-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .info-item .label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: rgba(255, 255, 255, 0.25);
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .info-item .value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #fff;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -0.2px;
+        }
+
+        .info-item .value.accent {
+            color: #818cf8;
+        }
+
+        .direction-display {
+            text-align: center;
+            margin-top: 20px;
+            padding: 14px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .direction-display .dir-text {
+            font-size: 28px;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: 1px;
+        }
+
+        .direction-display .dir-sub {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.25);
+            margin-left: 8px;
+            font-weight: 400;
+        }
+
+        .sensor-status {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.15);
+            text-align: center;
+            margin-top: 12px;
+            padding: 6px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.02);
+            letter-spacing: 0.3px;
+        }
+
+        .sensor-status .highlight {
+            color: rgba(99, 102, 241, 0.5);
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 28px 20px;
+                border-radius: 28px;
+            }
+            .header h1 { font-size: 17px; }
+            .header .sub { display: none; }
+            .compass-wrapper { max-width: 240px; }
+            .info-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+            .info-item { padding: 12px 10px; }
+            .info-item .value { font-size: 15px; }
+            .direction-display .dir-text { font-size: 22px; }
+            .needle-north {
+                border-bottom-width: 40px;
+                border-left-width: 8px;
+                border-right-width: 8px;
+            }
+            .needle-south {
+                border-top-width: 30px;
+                border-left-width: 8px;
+                border-right-width: 8px;
+            }
+            .needle-container { height: 34%; }
+            .direction-label { font-size: 13px !important; }
+            .direction-label.n { font-size: 16px !important; }
+        }
+
+        @media (max-width: 400px) {
+            .container { padding: 20px 16px; }
+            .compass-wrapper { max-width: 200px; }
+            .info-grid { grid-template-columns: 1fr 1fr; }
+            .direction-label { font-size: 11px !important; }
+            .direction-label.n { font-size: 14px !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div class="header-left">
+            <div class="header-icon">🧭</div>
+            <div>
+                <h1>나침반 <span class="sub">· Compass</span></h1>
+            </div>
+        </div>
+        <span class="status-badge" id="statusBadge">● 연결중</span>
+    </div>
+
+    <div class="compass-wrapper">
+        <div class="compass-ring">
+            <span class="direction-label n">N</span>
+            <span class="direction-label s">S</span>
+            <span class="direction-label e">E</span>
+            <span class="direction-label w">W</span>
+
+            <div class="tick-mark" style="transform: translate(-50%, -50%) rotate(0deg) translateY(-48%);"></div>
+            <div class="tick-mark" style="transform: translate(-50%, -50%) rotate(45deg) translateY(-48%);"></div>
+            <div class="tick-mark" style="transform: translate(-50%, -50%) rotate(90deg) translateY(-48%);"></div>
+            <div class="tick-mark" style="transform: translate(-50%, -50%) rotate(135deg) translateY(-48%);"></div>
+            <div class="tick-mark major" style="transform: translate(-50%, -50%) rotate(22.5deg) translateY(-48%);"></div>
+            <div class="tick-mark major" style="transform: translate(-50%, -50%) rotate(67.5deg) translateY(-48%);"></div>
+            <div class="tick-mark major" style="transform: translate(-50%, -50%) rotate(112.5deg) translateY(-48%);"></div>
+            <div class="tick-mark major" style="transform: translate(-50%, -50%) rotate(157.5deg) translateY(-48%);"></div>
+
+            <div class="needle-container" id="needle">
+                <div class="needle-north"></div>
+                <div class="needle-south"></div>
+            </div>
+            <div class="center-pin"></div>
+        </div>
+    </div>
+
+    <div class="info-grid">
+        <div class="info-item">
+            <div class="label">위도</div>
+            <div class="value" id="lat">---</div>
+        </div>
+        <div class="info-item">
+            <div class="label">경도</div>
+            <div class="value" id="lng">---</div>
+        </div>
+        <div class="info-item">
+            <div class="label">방향각</div>
+            <div class="value accent" id="heading">---°</div>
+        </div>
+    </div>
+
+    <div class="direction-display">
+        <span class="dir-text" id="dirText">--</span>
+        <span class="dir-sub" id="dirSub">방향 감지 중</span>
+    </div>
+
+    <div class="sensor-status" id="sensorStatus">
+        📱 <span class="highlight">●</span> DeviceOrientation 활성화 대기중...
+    </div>
+</div>
+
+<script>
+    // DOM
+    const needle = document.getElementById('needle');
+    const latEl = document.getElementById('lat');
+    const lngEl = document.getElementById('lng');
+    const headingEl = document.getElementById('heading');
+    const dirText = document.getElementById('dirText');
+    const dirSub = document.getElementById('dirSub');
+    const badge = document.getElementById('statusBadge');
+    const sensorStatus = document.getElementById('sensorStatus');
+
+    let currentHeading = 0;
+    let isOrientationActive = false;
+    let isUsingGPS = false;
+
+    // 방향 변환
+    function getDirection(deg) {
+        const dirs = [
+            { name: '북쪽', short: 'N', range: [348.75, 360] },
+            { name: '북쪽', short: 'N', range: [0, 11.25] },
+            { name: '북동쪽', short: 'NE', range: [11.25, 33.75] },
+            { name: '동북동', short: 'ENE', range: [33.75, 56.25] },
+            { name: '동쪽', short: 'E', range: [56.25, 78.75] },
+            { name: '동남동', short: 'ESE', range: [78.75, 101.25] },
+            { name: '남동쪽', short: 'SE', range: [101.25, 123.75] },
+            { name: '남남동', short: 'SSE', range: [123.75, 146.25] },
+            { name: '남쪽', short: 'S', range: [146.25, 168.75] },
+            { name: '남서쪽', short: 'SW', range: [168.75, 191.25] },
+            { name: '남남서', short: 'SSW', range: [191.25, 213.75] },
+            { name: '서쪽', short: 'W', range: [213.75, 236.25] },
+            { name: '서북서', short: 'WSW', range: [236.25, 258.75] },
+            { name: '서북서', short: 'WNW', range: [258.75, 281.25] },
+            { name: '북서쪽', short: 'NW', range: [281.25, 303.75] },
+            { name: '북북서', short: 'NNW', range: [303.75, 326.25] },
+            { name: '북서쪽', short: 'NW', range: [326.25, 348.75] }
+        ];
+
+        const d = ((deg % 360) + 360) % 360;
+        for (const dir of dirs) {
+            const [start, end] = dir.range;
+            if (d >= start && d < end) {
+                return { name: dir.name, short: dir.short };
+            }
+        }
+        return { name: '북쪽', short: 'N' };
+    }
+
+    // 나침반 업데이트
+    function updateCompass(heading) {
+        const d = ((heading % 360) + 360) % 360;
+        currentHeading = d;
+        needle.style.transform = `translate(-50%, -100%) rotate(${d}deg)`;
+
+        const dir = getDirection(d);
+        dirText.textContent = dir.name;
+        dirSub.textContent = `${dir.short} · ${Math.round(d)}°`;
+        headingEl.textContent = `${Math.round(d)}°`;
+    }
+
+    // 상태 업데이트
+    function setStatus(type, text) {
+        badge.textContent = text;
+        badge.className = 'status-badge';
+        if (type === 'active') badge.classList.add('active');
+        if (type === 'error') badge.classList.add('error');
+    }
+
+    // ==========================================
+    // 1. GPS로 위치 가져오기 (위도/경도)
+    // ==========================================
+    if ("geolocation" in navigator) {
+        setStatus('loading', '● 위치 확인중');
+
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                const lat = pos.coords.latitude;
+                const lng = pos.coords.longitude;
+
+                latEl.textContent = lat.toFixed(6);
+                lngEl.textContent = lng.toFixed(6);
+
+                // GPS heading이 있으면 사용 (없으면 0)
+                if (pos.coords.heading !== null && pos.coords.heading !== undefined) {
+                    isUsingGPS = true;
+                    updateCompass(pos.coords.heading);
+                    setStatus('active', '● GPS 추적중');
+                } else {
+                    // GPS heading이 없으면 DeviceOrientation에 맡김
+                    setStatus('active', '● 센서 대기중');
+                }
+
+                sensorStatus.innerHTML = '📍 GPS 위치 수신 완료 · <span class="highlight">●</span> 방향 센서 활성화 대기중';
+            },
+            (err) => {
+                console.error('GPS 오류:', err);
+                setStatus('error', '⚠️ 위치 접근 차단');
+                let msg = '위치 권한 필요';
+                if (err.code === 1) msg = '⚡ 권한을 허용해주세요';
+                else if (err.code === 2) msg = '📡 신호 없음';
+                else if (err.code === 3) msg = '⏱️ 시간 초과';
+                dirText.textContent = msg;
+                dirSub.textContent = '브라우저 설정에서 위치를 켜주세요';
+                dirSub.style.color = 'rgba(248, 113, 113, 0.5)';
+
+                latEl.textContent = '37.5665';
+                lngEl.textContent = '126.9780';
+                latEl.style.color = 'rgba(255,255,255,0.2)';
+                lngEl.style.color = 'rgba(255,255,255,0.2)';
+                sensorStatus.innerHTML = '⚠️ GPS 위치를 가져올 수 없습니다';
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 8000,
+                maximumAge: 0
+            }
+        );
+    } else {
+        setStatus('error', '⚠️ 지원 안함');
+        sensorStatus.innerHTML = '❌ 이 브라우저는 Geolocation을 지원하지 않습니다';
+    }
+
+    // ==========================================
+    // 2. DeviceOrientation API (방향 감지 - 핵심!)
+    // ==========================================
+    function startOrientation() {
+        if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+            // iOS 13+는 권한 요청 필요
+            DeviceOrientationEvent.requestPermission()
+                .then(response => {
+                    if (response === 'granted') {
+                        window.addEventListener('deviceorientation', handleOrientation);
+                        isOrientationActive = true;
+                        sensorStatus.innerHTML = '📱 <span style="color:#34d399;">●</span> 방향 센서 활성화됨!';
+                        setStatus('active', '● 실시간 추적중');
+                    } else {
+                        sensorStatus.innerHTML = '⚠️ 방향 센서 권한이 거부되었습니다';
+                    }
+                })
+                .catch(err => {
+                    console.error('Orientation 권한 오류:', err);
+                    sensorStatus.innerHTML = '⚠️ 방향 센서를 사용할 수 없습니다';
+                });
+        } else {
+            // 안드로이드 및 일반 브라우저
+            window.addEventListener('deviceorientation', handleOrientation);
+            isOrientationActive = true;
+            sensorStatus.innerHTML = '📱 <span style="color:#34d399;">●</span> 방향 센서 활성화됨!';
+            setStatus('active', '● 실시간 추적중');
+        }
+    }
+
+    // 방향 데이터 처리
+    function handleOrientation(event) {
+        // alpha: 0~360도 (북쪽=0, 시계방향)
+        let alpha = event.alpha || 0;
+
+        // iOS는 webkitCompassHeading을 사용 (더 정확함)
+        if (event.webkitCompassHeading !== undefined && event.webkitCompassHeading !== null) {
+            alpha = event.webkitCompassHeading;
+        }
+
+        // GPS heading이 없거나, DeviceOrientation이 더 우선
+        if (!isUsingGPS || isOrientationActive) {
+            // alpha가 0~360 범위로 오도록 보정
+            const heading = ((alpha % 360) + 360) % 360;
+            updateCompass(heading);
+        }
+    }
+
+    // 0.5초 후 Orientation 시작 (GPS보다 우선하진 않음)
+    setTimeout(() => {
+        startOrientation();
+    }, 500);
+
+    // 디버깅: 방향 정보 표시
+    console.log('🧭 나침반 앱 실행 중');
+    console.log('ℹ️ DeviceOrientation 활성화:', isOrientationActive);
+</script>
+
+</body>
+</html>
